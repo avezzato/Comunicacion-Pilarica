@@ -10,23 +10,22 @@
         h1 { font-size: 1.6em; margin-bottom: 5px; color: #1e293b; }
         .subtitle { color: #64748b; margin-bottom: 25px; font-size: 0.95em; }
         
-        /* Contenedor de dos botones verticales grandes */
         .button-group { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
         .btn-action { border: none; padding: 22px; border-radius: 12px; color: white; font-size: 1.15em; font-weight: bold; cursor: pointer; transition: transform 0.1s, opacity 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .btn-action:active { transform: scale(0.98); }
         
-        /* Colores específicos solicitados */
-        .btn-green { background-color: #10b981; } /* Novedades / Envío Certificados */
-        .btn-red { background-color: #ef4444; }   /* Notificación de ausencias */
+        .btn-green { background-color: #10b981; } 
+        .btn-red { background-color: #ef4444; }   
         
         .btn-action.selected { outline: 4px solid #3b82f6; }
 
-        /* Zona de texto */
         .input-section { display: none; margin-top: 10px; text-align: left; }
         .input-section label { font-weight: 600; font-size: 0.9em; color: #475569; display: block; margin-bottom: 5px; }
-        textarea { width: 100%; height: 100px; border-radius: 10px; border: 1px solid #cbd5e1; padding: 12px; margin-bottom: 15px; box-sizing: border-box; font-size: 1em; resize: none; }
+        textarea { width: 100%; height: 100px; border-radius: 10px; border: 1px solid #cbd5e1; padding: 12px; margin-bottom: 10px; box-sizing: border-box; font-size: 1em; resize: none; }
         
-        /* Botones de acción inferiores */
+        /* Cartel de aviso para adjuntar */
+        .alerta-adjunto { background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px; border-radius: 6px; margin-bottom: 15px; font-size: 0.9em; color: #1e40af; font-weight: 500; display: none; }
+
         .btn-whatsapp { width: 100%; background-color: #25D366; color: white; padding: 16px; border-radius: 10px; font-size: 1.2em; font-weight: bold; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2); }
         .btn-history { width: 100%; background-color: #e2e8f0; color: #334155; padding: 12px; border-radius: 10px; font-size: 0.95em; font-weight: 600; border: none; cursor: pointer; margin-top: 15px; }
     </style>
@@ -50,6 +49,10 @@
             <label id="labelMensaje" for="mensajeInput">Explica el motivo aquí:</label>
             <textarea id="mensajeInput" placeholder="Escribe los detalles..."></textarea>
             
+            <div id="alertaAdjunto" class="alerta-adjunto">
+                📌 <strong>Nota:</strong> Cuando se abra WhatsApp, recuerda usar el ícono del 📎 (clip) o la 📷 (cámara) para adjuntar la foto o el PDF de tu certificado.
+            </div>
+
             <button class="btn-whatsapp" onclick="enviarAWhatsApp()">
                 Enviar por WhatsApp 📲
             </button>
@@ -71,26 +74,23 @@
         function seleccionarCategoria(categoria, botonId) {
             categoriaSeleccionada = categoria;
             
-            // Quitar selección previa de botones
             document.getElementById('btn-nov').classList.remove('selected');
             document.getElementById('btn-aus').classList.remove('selected');
-            
-            // Marcar el botón seleccionado
             document.getElementById(botonId).classList.add('selected');
-            
-            // Mostrar la sección para escribir el motivo
             document.getElementById('sectionForm').style.display = 'block';
             
-            // Personalizar el texto de ayuda según el botón
             const label = document.getElementById('labelMensaje');
             const textarea = document.getElementById('mensajeInput');
+            const alerta = document.getElementById('alertaAdjunto');
             
             if (categoria === 'Notificación de ausencias') {
                 label.innerText = "Por favor, explica el motivo de tu ausencia:";
-                textarea.placeholder = "Ej: No asistiré al turno de mañana por turno médico. Adjuntaré certificado por este medio...";
+                textarea.placeholder = "Ej: No asistiré hoy por carpeta médica. Adjuntaré el comprobante...";
+                alerta.style.display = 'none'; // No es obligatorio mostrar el aviso de adjunto aquí
             } else {
-                label.innerText = "Detalla la novedad o certificado a enviar:";
-                textarea.placeholder = "Ej: Envío foto del certificado de escolaridad de mi hijo...";
+                label.innerText = "Detalla qué certificado estás enviando:";
+                textarea.placeholder = "Ej: Envío certificado de alta médica / escolaridad...";
+                alerta.style.display = 'block'; // Mostramos el recordatorio de usar el clip de WhatsApp
             }
             textarea.focus();
         }
@@ -103,15 +103,16 @@
                 return;
             }
 
-            // Formato limpio y profesional que te llegará a tu pantalla
-            let mensajeCompleto = `*AVISO DE PLANTA*\n\n*Tipo:* ${categoriaSeleccionada}\n*Detalle/Motivo:* ${mensajeUsuario}`;
+            // Si es certificado, le sumamos una línea al texto para indicarte que viene un archivo
+            let avisoAdjunto = (categoriaSeleccionada === 'Novedades / Envío de Certificados') ? '\n\n_[A continuación adjunto la foto/documento del certificado]_' : '';
+
+            let mensajeCompleto = `*AVISO DE PLANTA*\n\n*Tipo:* ${categoriaSeleccionada}\n*Detalle/Motivo:* ${mensajeUsuario}${avisoAdjunto}`;
             let mensajeCodificado = encodeURIComponent(mensajeCompleto);
             let url = `https://wa.me/${NUMERO_CENTRAL}?text=${mensajeCodificado}`;
 
             window.open(url, '_blank');
         }
 
-        // Abre directamente el chat con la empresa donde reside el historial real
         function verHistorial() {
             let url = `https://wa.me/${NUMERO_CENTRAL}`;
             window.open(url, '_blank');
